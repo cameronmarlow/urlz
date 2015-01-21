@@ -33,6 +33,6 @@ def create_app():
 
 def create_local_app():
     """Create an app environment suitable for working locally"""
-    app = urlz.app.create_app()
+    app = create_app()
     app.test_request_context().push()
     return app

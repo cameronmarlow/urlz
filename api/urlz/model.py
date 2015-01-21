@@ -5,8 +5,6 @@ from sqlalchemy.dialects.postgresql import UUID, JSON
 from flask.ext.security import SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin
 
-# TODO: Privacy
-
 # Initialize SQLAlchemy
 db = SQLAlchemy()
 
@@ -19,8 +17,8 @@ class AuditMixin(object):
 
 class IDMixin(object):
     """Mixin to provide standard ID types"""
-    id = db.Column(UUID(), primary_key=True,
-                   server_default=db.text("uuid_generate_v4()"))
+    id = db.Column(UUID(), server_default=db.func.uuid_generate_v4(),
+                   primary_key=True)
 
 # Define models
 roles_users = db.Table(
@@ -31,14 +29,14 @@ roles_users = db.Table(
     db.Column('updated_at', db.DateTime(), server_default=db.func.now(), onupdate=db.func.current_timestamp())
 )
 
-class Role(db.Model, RoleMixin, AuditMixin, IDMixin):
+class Role(IDMixin, AuditMixin, RoleMixin, db.Model):
     """User Role (admin, editor, etc.)"""
     __tablename__ = 'roles'
 
     name = db.Column(db.String(80), unique=True)
     description = db.Column(db.String(255))
 
-class User(db.Model, UserMixin, AuditMixin, IDMixin):
+class User(IDMixin, AuditMixin, UserMixin, db.Model):
     """User table"""
     __tablename__ = 'users'
 
@@ -57,7 +55,7 @@ class User(db.Model, UserMixin, AuditMixin, IDMixin):
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 
-class URL(db.model, AuditMixin, IDMixin):
+class URL(IDMixin, AuditMixin, db.Model):
     """General table for URLs"""
     __tablename__ = 'urls'
 
@@ -83,7 +81,7 @@ post_ccs = db.Table(
               onupdate=db.func.current_timestamp())
 )
 
-class Post(db.Model, IDMixin, AuditMixin):
+class Post(IDMixin, AuditMixin, db.Model):
     """The URL Post, in all its glory. Each post can be associated with tags
     (topics) and CCs (people to notify)"""
     __tablename__ = 'posts'
@@ -93,20 +91,26 @@ class Post(db.Model, IDMixin, AuditMixin):
     tags = db.relationship('Tag', secondary=post_tags,
                            backref=db.backref('posts', lazy='dynamic'))
     ccs = db.relationship('User', secondary=post_ccs)
+    privacy = db.Column(db.Enum('private', 'public', name='post_privacy'),
+                        default='public')
 
-class Tag(db.Model, IDMixin, AuditMixin):
+class Tag(IDMixin, AuditMixin, db.Model):
     """The Tag. A simple bucket for stuff."""
     __tablename__ = 'tags'
 
+    types = []
+
     owner_id = db.Column(UUID(), db.ForeignKey('users.id'))
     name = db.Column(db.String(255))
+    type = db.Column(db.Enum('user', 'group', 'system', 'org',
+                     name='tag_type'))
     description = db.Column(db.String(255))
 
-class URLCache(db.Model, AuditMixin):
+class URLCache(AuditMixin, db.Model):
     """Cache for URLs"""
     __tablename__ = 'urlcache'
 
-    url = db.Column(db.String, db.ForeignKey('urls.url'))
+    url = db.Column(db.String, db.ForeignKey('urls.url'), primary_key=True)
     headers = db.Column(JSON)
     status = db.Column(db.Enum('success', 'failure', name='url_status'),
                        default='success')

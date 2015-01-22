@@ -7,11 +7,13 @@ from flask.ext.mail import Mail
 from flask.ext.uuid import FlaskUUID
 from flask.ext.security import Security
 from urlz.sites import api
+from urlz.config import Config
 
 def create_app():
     app = Flask('urlz')
 
     # Initialize configuration (maybe make prefix relative?)
+    app.config.from_object(Config)
     AppConfig(app)
 
     # Initialize sql, login manager

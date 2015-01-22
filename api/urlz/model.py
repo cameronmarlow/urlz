@@ -2,6 +2,7 @@
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID, JSON
+from sqlalchemy import UniqueConstraint
 from flask.ext.security import SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin
 
@@ -102,9 +103,14 @@ class Tag(IDMixin, AuditMixin, db.Model):
 
     owner_id = db.Column(UUID(), db.ForeignKey('users.id'))
     name = db.Column(db.String(255))
+    name_normalized = db.Column(db.String(255))
     type = db.Column(db.Enum('user', 'group', 'system', 'org',
                      name='tag_type'))
     description = db.Column(db.String(255))
+    __table_args__ = (
+        UniqueConstraint("owner_id", "type", "name_normalized",
+                         name="user_tag_constraint"),
+    )
 
 class URLCache(AuditMixin, db.Model):
     """Cache for URLs"""

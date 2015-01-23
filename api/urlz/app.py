@@ -6,7 +6,10 @@ from flask.ext.appconfig import AppConfig
 from flask.ext.mail import Mail
 from flask.ext.uuid import FlaskUUID
 from flask.ext.security import Security
-from urlz.sites import api
+
+from urlz.sites.api import API
+from urlz.sites.login import login_blueprint
+
 from urlz.config import Config
 
 def create_app():
@@ -28,8 +31,8 @@ def create_app():
     flask_uuid = FlaskUUID()
     flask_uuid.init_app(app)
 
-    # Add Blueprints
-    app.register_blueprint(api, url_prefix='/api')
+    api = API(app)
+    app.register_blueprint(login_blueprint)
 
     return app
 

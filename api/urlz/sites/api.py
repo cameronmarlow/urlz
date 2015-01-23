@@ -1,148 +1,85 @@
 # -*- coding: utf-8 -*-
-"""Flask Blueprint for API"""
+"""Flask Blueprints for API"""
 
 import json
 from flask import Blueprint, abort, request, jsonify, url_for
-from flask.ext.security.decorators import auth_token_required
+from flask.ext.security.decorators import _check_token
 from flask.ext.security.utils import encrypt_password, verify_password
 from flask.ext.security.core import current_user
+from flask.ext.restless import APIManager, ProcessingException
+
 
 from urlz.model import db, Post, Tag, URL, User, user_datastore
 from urlz.util import deduplicate_form
 
-api = Blueprint('api', __name__)
+def user_encrypt_password(data=None, **kw):
+    """Encrypt a user password before storing in the database"""
+    if 'password' in data:
+        data['password'] = encrypt_password(data['password'])
 
-@api.route('/post/', methods=['GET'])
-@api.route('/post/<uuid:obj_id>/', methods=['GET'])
-def post_get(obj_id=None):
-    """API endpoint for posts"""
-    if obj_id is not None:
-        # convert from uuid -> str
-        res_obj = Post.query.get_or_404(str(obj_id))
-        if res_obj:
-            res_obj = res_obj.as_dict()
-    else:
-        res_obj = {
-            'results': [x.as_dict() for x in Post.query.limit(10)]
-        }
-    return jsonify(res_obj)
-    abort(404)
+def check_auth(instance_id=None, **kw):
+    _check_token()
+    if not current_user.is_authenticated():
+        raise ProcessingException(description='Not authenticated!',
+                code=401)
+    return True
 
-@api.route('/post/', methods=['POST', 'PUT'])
-@api.route('/post/<uuid:obj_id>/', methods=['DELETE', 'PUT'])
-@auth_token_required
-def post_edit(obj_id=None):
-    if request.method == 'POST':
-        url = request.json.get('url')
-        print(url)
-    if request.method == 'PUT':
-        res_obj = Post.query.get_or_404(obj_id)
-        res_obj.data.update(request.get_json())
-        db.session.add(res_obj)
-        db.session.commit()
-    abort(400)
+def tag_normalize_name(data=None, **kw):
+    """Normalize tag name for deduplication"""
+    if 'name' in data:
+        data['name_normalized'] = deduplicate_form(data['name'])
 
-## Tag creation/search
+def add_owner_id(data=None, **kw):
+    """Add owner_id to tag"""
+    data['owner_id'] = current_user.id
 
-@api.route('/tag/<uuid:tag_id>', methods=['GET'])
-@auth_token_required
-def tag_get(tag_id):
-    tag = Tag.query.get_or_404(str(tag_id))
-    return jsonify({
-        'id': tag.id,
-        'name': tag.name,
-        'type': tag.type,
-        'description': tag.description
-    })
+class API(object):
 
-@api.route('/tag/', methods=['POST'])
-@api.route('/tag/<uuid:tag_id>/', methods=['DELETE', 'PUT'])
-@auth_token_required
-def tag_edit(obj_id=None):
-    if request.method == 'POST':
-        name = request.json.get('name')
-        type = request.json.get('type')
-        description = request.json.get('description')
-        tag = Tag(name=name,
-                  name_normalized=deduplicate_form(name),
-                  type=type,
-                  description=description,
-                  owner_id=current_user.id)
-        db.session.add(tag)
-        db.session.commit()
-        return jsonify({'tag_id': tag.id}), 201,\
-            {'Location': url_for('api.tag_get', tag_id=tag.id)}
+    def __init__(self, app):
+        self.app = app
+        self.manager = APIManager(app, flask_sqlalchemy_db=db)
+        self.generate_blueprints()
 
-    abort(400)
+    def generate_blueprints(self):
+        """Generate blueprints for API usage"""
+        user_blueprint = self.manager.create_api_blueprint(
+            User,
+            methods=['GET', 'POST', 'PATCH', 'DELETE'],
+            primary_key='username',
+            include_columns=['name', 'username', 'tags', 'posts'],
+            preprocessors=dict(
+                GET_SINGLE=[check_auth],
+                GET_MANY=[check_auth],
+                POST=[user_encrypt_password],
+                PATCH=[check_auth, user_encrypt_password],
+                DELETE=[check_auth]
+            )
+        )
+        self.app.register_blueprint(user_blueprint)
 
-## User creation/lookup
+        tag_blueprint = self.manager.create_api_blueprint(
+            Tag,
+            methods=['GET', 'POST', 'PATCH', 'DELETE'],
+            preprocessors=dict(
+                GET_SINGLE=[check_auth],
+                GET_MANY=[check_auth],
+                POST=[check_auth, add_owner_id, tag_normalize_name],
+                PATCH=[check_auth, tag_normalize_name],
+                DELETE=[check_auth]
+            )
+        )
+        self.app.register_blueprint(tag_blueprint)
 
-@api.route('/user/<username>')
-def user_get(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    return jsonify({
-        "username": user.username
-    })
+        post_blueprint = self.manager.create_api_blueprint(
+            Post,
+            methods=['GET', 'POST', 'PATCH', 'DELETE'],
+            preprocessors=dict(
+                GET_SINGLE=[check_auth],
+                GET_MANY=[check_auth],
+                POST=[check_auth, add_owner_id],
+                PATCH=[check_auth],
+                DELETE=[check_auth]
+            )
 
-@api.route('/user/', methods=['PUT', 'POST'])
-def user_create():
-    username = request.json.get('username')
-    email = request.json.get('email')
-    password = request.json.get('password')
-
-    if username is None or password is None or email is None:
-        # Username/password/email missing
-        api_error("Username, password or email missing")
-    if User.query.filter_by(username=username).first() is not None:
-        # Username exists
-        api_error("Username exists")
-
-    # encrypt password
-    encrypted_password = encrypt_password(password)
-    user = user_datastore.create_user(email=email,
-                                      username=username,
-                                      password=encrypted_password)
-    db.session.commit()
-    return jsonify({'username': user.username}), 201,\
-        {'Location': url_for('api.user_get', username=user.username)}
-
-# Authentication
-@api.route('/login', methods=['POST'])
-def login():
-    username = request.json.get('username')
-    password = request.json.get('password')
-    if username is None or password is None:
-        api_error("Username or password missing")
-    user = User.query.filter_by(username=username).first()
-    if verify_password(password, user.password):
-        return jsonify({
-            'username': user.username,
-            'auth_token': user.get_auth_token()
-        })
-    else:
-        api_error("Password mismatch")
-
-# Error Handlers
-
-@api.errorhandler(400)
-def api_error(error=None):
-    """Custom error response for API issues"""
-    response = {
-        'code': 400,
-        'message': 'The current API request could not be processed'
-    }
-    if error:
-        response['message'] = str(error)
-
-    return jsonify(response)
-
-@api.errorhandler(404)
-def not_found(error=None):
-    """Custom error response for API 404"""
-    response = {
-        'code': 404,
-        'message': 'Interface not defined for given URL'
-    }
-    if error:
-        response['message'] = error
-    return jsonify(response)
+        )
+        self.app.register_blueprint(post_blueprint)

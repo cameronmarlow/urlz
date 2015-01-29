@@ -6,6 +6,9 @@ from sqlalchemy import UniqueConstraint
 from flask.ext.security import SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin
 
+from urlz.util import deduplicate_form
+
+
 # Initialize SQLAlchemy
 db = SQLAlchemy()
 
@@ -41,10 +44,10 @@ class User(IDMixin, AuditMixin, UserMixin, db.Model):
     """User table"""
     __tablename__ = 'user'
 
-    email = db.Column(db.String(255), unique=True)
-    username = db.Column(db.String(64), unique=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    username = db.Column(db.String(64), unique=True, nullable=False)
     name = db.Column(db.String(255))
-    password = db.Column(db.String(255))
+    password = db.Column(db.String(255), nullable=False)
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime())
     last_login_at = db.Column(db.DateTime())
@@ -63,7 +66,7 @@ class URL(IDMixin, AuditMixin, db.Model):
     """General table for URLs"""
     __tablename__ = 'url'
 
-    url = db.Column(db.String, unique=True)
+    url = db.Column(db.String, unique=True, nullable=False)
 
 # Post -> Tag assocation table
 post_tag = db.Table(
@@ -90,35 +93,43 @@ class Post(IDMixin, AuditMixin, db.Model):
     (topics) and CCs (people to notify)"""
     __tablename__ = 'post'
 
-    owner_id = db.Column(UUID(), db.ForeignKey('user.id'))
-    url = db.Column(UUID(), db.ForeignKey('url.id'))
+    owner_id = db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
+    canonical_url = db.Column(UUID(), db.ForeignKey('url.id'), nullable=False)
     note = db.Column(db.String)
     tags = db.relationship('Tag', secondary=post_tag,
                            backref=db.backref('post', lazy='dynamic'))
     ccs = db.relationship('User', secondary=post_cc)
     privacy = db.Column(db.Enum('private', 'public', name='post_privacy'),
-                        default='public')
+                        default='public', nullable=False)
 
 class Tag(IDMixin, AuditMixin, db.Model):
     """The Tag. A simple bucket for stuff."""
     __tablename__ = 'tag'
 
-    owner_id = db.Column(UUID(), db.ForeignKey('user.id'))
-    name = db.Column(db.String(255))
-    name_normalized = db.Column(db.String(255))
+    owner_id = db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    name_normalized = db.Column(db.String(255), nullable=False)
     type = db.Column(db.Enum('user', 'group', 'system', 'org',
-                     name='tag_type'))
+                     name='tag_type'), nullable=False)
     description = db.Column(db.String(255))
+
     __table_args__ = (
         UniqueConstraint("owner_id", "type", "name_normalized",
                          name="user_tag_constraint"),
     )
 
+    def __init__(self, **kwargs):
+        super(Tag, self).__init__(**kwargs)
+        if self.name and not self.name_normalized:
+            self.name_normalized = deduplicate_form(self.name)
+
 class URLCache(AuditMixin, db.Model):
     """Cache for URLs"""
     __tablename__ = 'urlcache'
 
-    url = db.Column(db.String, db.ForeignKey('url.url'), primary_key=True)
+    url_id = db.Column(UUID, db.ForeignKey('url.id'),
+                       primary_key=True,
+                       nullable=False)
     headers = db.Column(JSON)
     status = db.Column(db.Enum('success', 'failure', name='url_status'),
                        default='success')

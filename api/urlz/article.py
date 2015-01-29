@@ -7,19 +7,19 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
-from urlz.extraction import FacebookOpenGraphExtractor, \
-    TwitterCardExtractor, DateTagExtractor, LinkExtractor, MicrodataExtractor
+from urlz.extraction import FacebookOpenGraphExtractor, DateTagExtractor, \
+    TwitterCardExtractor, GenericHTMLExtractor, MicrodataExtractor
 
 class Article(object):
     """Article is an abstract object to support extraction"""
 
-    EXTRACTORS = {
-        'facebook': FacebookOpenGraphExtractor,
-        'twitter': TwitterCardExtractor,
-        'dates': DateTagExtractor,
-        'links': LinkExtractor,
-        'microdata': MicrodataExtractor
-    }
+    EXTRACTORS = [
+        FacebookOpenGraphExtractor,
+        TwitterCardExtractor,
+        MicrodataExtractor,
+        DateTagExtractor,
+        GenericHTMLExtractor,
+    ]
 
     headers = {
         'User-Agent': 'urliobot/0.1 (http://url.io)'
@@ -49,9 +49,8 @@ class Article(object):
         if self.html:
             self.parser = BeautifulSoup(self.html)
 
-            for key, exclass in self.EXTRACTORS.items():
-                print(key)
-                ex = exclass(self.parser, self.html)
+            for exclass in self.EXTRACTORS:
+                ex = exclass(self.parser, self.html, url=self.url)
                 ex.extract(self.properties)
             self.logger.warn("Extracted properties: {0}".format(
                 dict(self.properties)))

@@ -2,6 +2,7 @@
 """HTML Extraction"""
 
 import logging
+from urllib.parse import urljoin
 
 import microdata
 
@@ -16,10 +17,11 @@ class BaseExtractor(object):
 class HTMLExtractor(BaseExtractor):
     """Abstract base class for various extractors which use HTML"""
 
-    def __init__(self, parser, html=None):
+    def __init__(self, parser, html=None, url=None):
         """Add html and the beautifulsoup parser if available"""
         self.html = html
         self.parser = parser
+        self.url = url
         self.logger = logging.getLogger()
 
 class TagExtractor(HTMLExtractor):
@@ -101,14 +103,31 @@ class DateTagExtractor(TagExtractor):
     __key_attr__ = 'itemprop'
     __value_attr__ = 'content'
 
-class LinkExtractor(TagExtractor):
-    """Class for extracting canonical links."""
+class GenericHTMLExtractor(HTMLExtractor):
+    """Class for extracting a variety of general metadata."""
 
     def extract(self, extracted):
-        # extract canonical links
+        self.logger.debug("Running {0} Extractor".format(self.__class__))
+
+        # Canonical URL
         for link in self.parser.find_all('link', rel='canonical'):
-            if 'href' in link and link['href']:
-                extracted['canonical_urls'] = link['href']
+            if 'href' in link.attrs and link.attrs['href']:
+                extracted['canonical_urls'].append(link.attrs['href'])
+
+        # Title
+        for title in self.parser.find_all('title'):
+            extracted['titles'].append(title.text)
+
+        # Meta description
+        for meta_tag in self.parser.find_all('meta',
+                                             attrs={'name':'description'}):
+            if 'content' in meta_tag.attrs:
+                extracted['descriptions'].append(meta_tag.attrs['content'])
+
+        for image in self.parser.find_all('img'):
+            if 'src' in image.attrs:
+                url = urljoin(self.url, image.attrs['src'])
+                extracted['images'].append(url)
 
 class BaseMicrodataExtractor(BaseExtractor):
 
@@ -117,11 +136,14 @@ class BaseMicrodataExtractor(BaseExtractor):
     def __init__(self, item):
         """New instance with item"""
         self.item = item
+        self.logger = logging.getLogger()
 
     def extract(self, extracted):
+        self.logger.debug("Running {0} Extractor".format(self.__class__))
         for key in self.__property_map__.keys():
             if self.item.get(key):
-                extracted[self.__property_map__[key]] = self.item.get(key)
+                extkey = self.__property_map__[key]
+                extracted[extkey].append(self.item.get(key))
 
 class MicrodataArticleExtractor(BaseMicrodataExtractor):
 
@@ -142,6 +164,7 @@ class MicrodataExtractor(HTMLExtractor):
     }
 
     def extract(self, extracted):
+        self.logger.debug("Running {0} Extractor".format(self.__class__))
         # find Microdata items
         items = microdata.get_items(self.html)
         for item in items:

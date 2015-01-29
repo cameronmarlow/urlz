@@ -10,24 +10,18 @@ from flask.ext.restless import APIManager, ProcessingException
 
 
 from urlz.model import db, Post, Tag, URL, User, user_datastore
-from urlz.util import deduplicate_form
 
 def user_encrypt_password(data=None, **kw):
     """Encrypt a user password before storing in the database"""
     if 'password' in data:
         data['password'] = encrypt_password(data['password'])
 
-def check_auth(instance_id=None, **kw):
+def check_auth(**kw):
     _check_token()
     if not current_user.is_authenticated():
         raise ProcessingException(description='Not authenticated!',
                 code=401)
     return True
-
-def tag_normalize_name(data=None, **kw):
-    """Normalize tag name for deduplication"""
-    if 'name' in data:
-        data['name_normalized'] = deduplicate_form(data['name'])
 
 def add_owner_id(data=None, **kw):
     """Add owner_id to tag"""
@@ -51,7 +45,7 @@ class API(object):
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],
                 POST=[user_encrypt_password],
-                PATCH=[check_auth, user_encrypt_password],
+                PATCH_SINGLE=[check_auth, user_encrypt_password],
                 DELETE=[check_auth]
             )
         )
@@ -63,8 +57,8 @@ class API(object):
             preprocessors=dict(
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],
-                POST=[check_auth, add_owner_id, tag_normalize_name],
-                PATCH=[check_auth, tag_normalize_name],
+                POST=[check_auth, add_owner_id],
+                PATCH_SINGLE=[check_auth],
                 DELETE=[check_auth]
             )
         )
@@ -77,9 +71,22 @@ class API(object):
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],
                 POST=[check_auth, add_owner_id],
-                PATCH=[check_auth],
+                PATCH_SINGLE=[check_auth],
                 DELETE=[check_auth]
             )
 
         )
         self.app.register_blueprint(post_blueprint)
+
+        url_blueprint = self.manager.create_api_blueprint(
+            URL,
+            methods=['GET', 'POST'],
+            primary_key='url',
+            preprocessors=dict(
+                GET_SINGLE=[check_auth],
+                GET_MANY=[check_auth],
+                POST=[check_auth]
+            )
+        )
+        self.app.register_blueprint(url_blueprint)
+

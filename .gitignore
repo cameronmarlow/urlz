@@ -57,3 +57,5 @@ target/
 */venv/*
 
 .env
+.DS_Store
+xcuserdata

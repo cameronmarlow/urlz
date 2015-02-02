@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7B702BD91A7F49FC005228D2 /* json.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B702BD81A7F49FC005228D2 /* json.swift */; };
 		7BFCD8051A7EC47A004D6F4E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCD8041A7EC47A004D6F4E /* AppDelegate.swift */; };
 		7BFCD8081A7EC47A004D6F4E /* URLer.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCD8061A7EC47A004D6F4E /* URLer.xcdatamodeld */; };
 		7BFCD80A1A7EC47A004D6F4E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCD8091A7EC47A004D6F4E /* ViewController.swift */; };
@@ -27,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7B702BD81A7F49FC005228D2 /* json.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = json.swift; path = "../../../../../../Users/jeffery/Downloads/swift-json-master/json/json.swift"; sourceTree = "<group>"; };
 		7BFCD7FF1A7EC47A004D6F4E /* URLer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = URLer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BFCD8031A7EC47A004D6F4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7BFCD8041A7EC47A004D6F4E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 		7BFCD8011A7EC47A004D6F4E /* URLer */ = {
 			isa = PBXGroup;
 			children = (
+				7B702BD81A7F49FC005228D2 /* json.swift */,
 				7BFCD8041A7EC47A004D6F4E /* AppDelegate.swift */,
 				7BFCD8091A7EC47A004D6F4E /* ViewController.swift */,
 				7BFCD80B1A7EC47A004D6F4E /* Main.storyboard */,
@@ -218,6 +221,7 @@
 				7BFCD80A1A7EC47A004D6F4E /* ViewController.swift in Sources */,
 				7BFCD8081A7EC47A004D6F4E /* URLer.xcdatamodeld in Sources */,
 				7BFCD8051A7EC47A004D6F4E /* AppDelegate.swift in Sources */,
+				7B702BD91A7F49FC005228D2 /* json.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +415,7 @@
 				7BFCD8231A7EC47A004D6F4E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		7BFCD8241A7EC47A004D6F4E /* Build configuration list for PBXNativeTarget "URLerTests" */ = {
 			isa = XCConfigurationList;
@@ -419,6 +424,7 @@
 				7BFCD8261A7EC47A004D6F4E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

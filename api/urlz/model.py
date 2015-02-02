@@ -1,5 +1,7 @@
 """Models for SQL Datastore"""
 
+from uuid import uuid4
+
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy import UniqueConstraint
@@ -7,7 +9,7 @@ from flask.ext.security import SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin
 
 from urlz.util import deduplicate_form
-
+from urlz.article import Article
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
@@ -67,6 +69,35 @@ class URL(IDMixin, AuditMixin, db.Model):
     __tablename__ = 'url'
 
     url = db.Column(db.String, unique=True, nullable=False)
+    redirect_to = db.Column(UUID(), db.ForeignKey('url.id'))
+    redirects = db.relationship('URL')
+    status = db.Column(db.Enum('success', 'failure', name='url_status'),
+                       default='success')
+    title = db.Column(db.String)
+    description = db.Column(db.String)
+    image = db.Column(db.String)
+
+    def __init__(self, **kwargs):
+        super(URL, self).__init__(**kwargs)
+        if not self.redirect_to:
+            # Generate ID
+            self.id = str(uuid4())
+            # Maybe want to expedite this in the future
+            # First crawl and cache the URL
+            article = Article(self.url)
+            article.parse()
+            canonical_url = article.get_canonical_url()
+            if self.url != canonical_url:
+                # create a redirect and set URL to canonicalized form
+                url = URL(url=self.url, redirect_to=self.id)
+                self.redirects.append(url)
+                self.url = canonical_url
+            self.status = 'failure'
+            if article.response.reason == 'OK':
+                self.status = 'success'
+            self.title = article.get_title()
+            self.image = article.get_image()
+            self.description = article.get_description()
 
 # Post -> Tag assocation table
 post_tag = db.Table(
@@ -130,6 +161,8 @@ class URLCache(AuditMixin, db.Model):
     url_id = db.Column(UUID, db.ForeignKey('url.id'),
                        primary_key=True,
                        nullable=False)
-    headers = db.Column(JSON)
     status = db.Column(db.Enum('success', 'failure', name='url_status'),
                        default='success')
+    title = db.Column(db.String)
+    description = db.Column(db.String)
+    image = db.Column(db.String)

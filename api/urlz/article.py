@@ -54,3 +54,19 @@ class Article(object):
                 ex.extract(self.properties)
             self.logger.warn("Extracted properties: {0}".format(
                 dict(self.properties)))
+
+    def get_canonical_url(self):
+        if 'canonical_urls' in self.properties:
+            return self.properties['canonical_urls'][0]
+
+    def get_title(self):
+        if 'titles' in self.properties:
+            return self.properties['titles'][0]
+
+    def get_description(self):
+        if 'descriptions' in self.properties:
+            return self.properties['descriptions'][0]
+
+    def get_image(self):
+        if 'images' in self.properties:
+            return self.properties['images'][0]

@@ -81,7 +81,6 @@ class API(object):
         url_blueprint = self.manager.create_api_blueprint(
             URL,
             methods=['GET', 'POST'],
-            primary_key='url',
             preprocessors=dict(
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],

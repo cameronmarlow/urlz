@@ -15,6 +15,11 @@ def login():
     if username is None or password is None:
         abort(400)
     user = User.query.filter_by(username=username).first()
+    if user is None:
+        user = User.query.filter_by(email=username).first()
+    if user is None:
+        # User not found
+        abort(400)
     if verify_password(password, user.password):
         return jsonify({
             'username': user.username,

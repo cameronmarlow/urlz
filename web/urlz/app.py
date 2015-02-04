@@ -13,7 +13,7 @@ from urlz.sites.api import API
 from urlz.sites.login import login_blueprint
 from urlz.sites.public import public_blueprint
 from urlz.sites.users import users_blueprint
-from urlz.sites.security import ExtendedRegisterForm
+from urlz.sites.security import ExtendedRegisterForm, LoginBothForm
 
 from urlz.config import Config
 
@@ -34,7 +34,8 @@ def create_app():
 
     security = Security(app,
                         user_datastore,
-                        confirm_register_form=ExtendedRegisterForm)
+                        confirm_register_form=ExtendedRegisterForm,
+                        login_form=LoginBothForm)
     app.db = db
     mail = Mail(app)
 

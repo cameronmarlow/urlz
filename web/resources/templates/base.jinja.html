@@ -1,0 +1,66 @@
+{% extends "bootstrap/base.html" %}
+
+{% block navbar %}
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">URLer</a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      {% include "security/_menu.jinja.html" %}
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">Link</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="#">Action</a></li>
+            <li><a href="#">Another action</a></li>
+            <li><a href="#">Something else here</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% set alert_classes = {
+    'message': 'info',
+    'warning': 'warning',
+    'error': 'error',
+    'success': 'success'} %}
+  {% if messages %}
+    <div class="page-alerts">
+      {% for category, message in messages %}
+        <div class="page-alert alert alert-block alert-{{alert_classes[category]|d("info", true)}}" role="alert">
+          <button type="button" class="close"><span aria-hidden="true">&times;<span class="sr-only">Close</span></button>
+          {{ message|safe }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <div class="container-fluid">
+    {{ content }}
+  </div>
+  {% block scripts %}
+  {{super()}}
+  <script src="{{url_for('static', filename='ext/jquery.rest.min.js')}}"></script>
+  <script src="{{url_for('static', filename='api.js')}}"></script>
+
+  {% endblock %}
+
+  {% endwith %}
+{% endblock %}

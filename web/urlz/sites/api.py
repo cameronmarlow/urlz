@@ -20,8 +20,14 @@ def check_auth(**kw):
     _check_token()
     if not current_user.is_authenticated():
         raise ProcessingException(description='Not authenticated!',
-                code=401)
+            code=401)
     return True
+
+def check_owner(data=None, **kw):
+    """Check to make sure the owner of an object is updating/deleting it"""
+    if 'owner_id' in data and not data['owner_id'] == current_user.id:
+        raise ProcessingException(description="No write privileges",
+            code=401)
 
 def add_owner_id(data=None, **kw):
     """Add owner_id to tag"""
@@ -45,8 +51,8 @@ class API(object):
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],
                 POST=[user_encrypt_password],
-                PATCH_SINGLE=[check_auth, user_encrypt_password],
-                DELETE=[check_auth]
+                PATCH_SINGLE=[check_auth, user_encrypt_password, check_owner],
+                DELETE=[check_auth, check_owner]
             )
         )
         self.app.register_blueprint(user_blueprint)
@@ -57,9 +63,9 @@ class API(object):
             preprocessors=dict(
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],
-                POST=[check_auth, add_owner_id],
-                PATCH_SINGLE=[check_auth],
-                DELETE=[check_auth]
+                POST=[check_auth, add_owner_id, check_owner],
+                PATCH_SINGLE=[check_auth, check_owner],
+                DELETE=[check_auth, check_owner]
             )
         )
         self.app.register_blueprint(tag_blueprint)
@@ -70,9 +76,9 @@ class API(object):
             preprocessors=dict(
                 GET_SINGLE=[check_auth],
                 GET_MANY=[check_auth],
-                POST=[check_auth, add_owner_id],
-                PATCH_SINGLE=[check_auth],
-                DELETE=[check_auth]
+                POST=[check_auth, check_owner, add_owner_id],
+                PATCH_SINGLE=[check_auth, check_owner],
+                DELETE=[check_auth, check_owner]
             )
 
         )

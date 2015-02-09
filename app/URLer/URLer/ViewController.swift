@@ -10,7 +10,7 @@ import UIKit
 import CoreData
 
 class ViewController: UIViewController {
-
+    
     
     /** Auth/Signup View **/
     @IBOutlet weak var auth_view: UIView!
@@ -38,15 +38,16 @@ class ViewController: UIViewController {
         } else {
             return nil
         }
-     }()
-
+        }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        println(managedObjectContext!)
         //self.auth_view.hidden = true
         // Do any additional setup after loading the view, typically from a nib.
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -63,38 +64,56 @@ class ViewController: UIViewController {
     
     func login(username: String, password:String) {
         println("LOGGING IN WITH (" + username + "/" + password + ")")
+        
+        //Create you's k/v pairs for logging in.
         let login_obj:[String:AnyObject] = [
             "username":username,
             "password":password
         ]
         
-        auth_view.alpha = 0.25;
-        
-        let login_json  = JSON(login_obj)
-        let login_str   = login_json.toString()
-        let login_url   = NSURL(string: API_ENDPOINT + "/api/login")
-        let request     = NSMutableURLRequest(URL: login_url!)
-        request.setValue("application/json", forHTTPHeaderField: "Content-type");
-        request.HTTPMethod  = "POST"
-        
-        let data        = login_str.dataUsingEncoding(NSUTF8StringEncoding)
-        let task        = NSURLSession.sharedSession().uploadTaskWithRequest(request, fromData: data, completionHandler: { (data:NSData!, response:NSURLResponse!, error: NSError!) -> Void in
+        self.callAPI("/api/login", data: login_obj, { (data:NSData!, response:NSURLResponse!, error: NSError!) -> Void in
             if (error == nil) {
                 let rspDict:NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: nil) as NSDictionary
                 println(rspDict)
             }
         })
-        task.resume()
     }
     
     
-
+    func callAPI(method: String?, data: AnyObject?, completionHandler: ((NSData!, NSURLResponse!, NSError!) -> Void)?) {
+        
+        //Set up the data.  First, convert it to JSON, then to a string.
+        let request_str     = JSON(data!).toString()
+        //Encode the string as UTF-8 data.
+        let data = request_str.dataUsingEncoding(NSUTF8StringEncoding)
+        
+        //Make the request object.
+        let request_url     = NSURL(string: API_ENDPOINT + method!)
+        let request         = NSMutableURLRequest(URL: request_url!)
+        
+        //Set the headers / method.
+        request.setValue("application/json", forHTTPHeaderField: "Content-type")
+        request.HTTPMethod  = "POST"
+        
+        //Make the request.
+        
+        //Get access to the app's shared session singleton.
+        let session     = NSURLSession.sharedSession()
+        let task        = session.uploadTaskWithRequest(request, fromData: data, completionHandler)
+        task.resume();
+    }
+    
+    
+    
+    
+    
     @IBAction func onSignupPress(sender: UIButton) {
         if (!self.signup_uname.text.isEmpty &&
             !self.signup_pass.text.isEmpty &&
             !self.signup_realname.text.isEmpty &&
             !self.signup_email.text.isEmpty) {
                 
+                //Create k/v pairs for signing up.
                 let signup_obj:[String:AnyObject] = [
                     "username":self.signup_uname.text,
                     "name":self.signup_realname.text,
@@ -102,17 +121,7 @@ class ViewController: UIViewController {
                     "password":self.signup_pass.text
                 ]
                 
-                let signup_json  = JSON(signup_obj)
-                let signup_str   = signup_json.toString()
-                let signup_url   = NSURL(string: API_ENDPOINT + "/api/user")
-                let request     = NSMutableURLRequest(URL: signup_url!)
-                request.setValue("application/json", forHTTPHeaderField: "Content-type");
-                request.HTTPMethod  = "POST"
-                
-                auth_view.alpha = 0.25;
-                
-                let data        = signup_str.dataUsingEncoding(NSUTF8StringEncoding)
-                let task        = NSURLSession.sharedSession().uploadTaskWithRequest(request, fromData: data, completionHandler: { (data:NSData!, response:NSURLResponse!, error: NSError!) -> Void in
+                self.callAPI("/api/user", data: signup_obj, { (data:NSData!, response:NSURLResponse!, error: NSError!) -> Void in
                     if (error == nil) {
                         let rspDict:NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: nil) as NSDictionary
                         if (rspDict["message"] != nil) {
@@ -127,8 +136,7 @@ class ViewController: UIViewController {
                         }
                     }
                 })
-                task.resume()
-            
+                
         } else {
             //TODO - show alert.
         }
@@ -136,7 +144,7 @@ class ViewController: UIViewController {
     
     
     
- 
+    
     
 }
 

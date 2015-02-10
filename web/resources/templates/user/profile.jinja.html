@@ -14,4 +14,16 @@
     </div>
     <div class="col-xs-2"></div>
 </div>
+
+<div id="tagList" class="row">
+  <ul data-bind="foreach: tags">
+    <li><span data-bind="text: name"> </span></li>
+  </ul>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+  <script src="{{ url_for('static', filename='js/tag.js') }}"></script>
 {% endblock %}

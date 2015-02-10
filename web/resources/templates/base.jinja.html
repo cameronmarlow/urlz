@@ -57,9 +57,10 @@
   </div>
   {% block scripts %}
   {{super()}}
-  <script src="{{url_for('static', filename='ext/jquery.rest.min.js')}}"></script>
-  <script src="{{url_for('static', filename='api.js')}}"></script>
-
+  <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.2.0/knockout-min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.rest/1.0.2/jquery.rest.min.js"></script>
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
   {% endblock %}
 
   {% endwith %}

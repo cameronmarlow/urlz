@@ -2,6 +2,8 @@
 """Flask Blueprints for Public website"""
 
 from flask import Blueprint, abort, request, jsonify, render_template
+from flask.ext.security.core import current_user
+
 
 users_blueprint = Blueprint('users', __name__)
 

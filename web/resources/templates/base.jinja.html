@@ -1,5 +1,10 @@
 {% extends "bootstrap/base.html" %}
 
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{url_for('static', filename='css/site.css')}}" />
+{% endblock %}
+
 {% block navbar %}
 <nav class="navbar navbar-default" role="navigation">
   <div class="container-fluid">
@@ -57,8 +62,6 @@
   </div>
   {% block scripts %}
   {{super()}}
-  <script src="{{url_for('static', filename='ext/jquery.rest.min.js')}}"></script>
-  <script src="{{url_for('static', filename='api.js')}}"></script>
 
   {% endblock %}
 

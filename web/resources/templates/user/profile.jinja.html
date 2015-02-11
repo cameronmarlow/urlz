@@ -11,6 +11,9 @@
     <div class="col-xs-8">
         <h1>{{ username }}</h1>
         {{ content }}
+        <p>Drag the following link to your titlebar:
+            <a href="javascript:q=location.href;if(document.getSelection){d=document.getSelection();};p=document.title;void(open('{{ url_for('users.post', _external=True) }}?url='+encodeURIComponent(q)+'&description='+encodeURIComponent(d)+'&title='+encodeURIComponent(p),'URLer', 'toolbar=no,width=700,height=350'));">URLer</a> ↗↗
+        </p>
     </div>
     <div class="col-xs-2"></div>
 </div>

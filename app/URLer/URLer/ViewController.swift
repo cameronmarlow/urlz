@@ -74,11 +74,19 @@ class ViewController: UIViewController {
         self.callAPI("/api/login", data: login_obj, { (data:NSData!, response:NSURLResponse!, error: NSError!) -> Void in
             if (error == nil) {
                 let rspDict:NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: nil) as NSDictionary
-                println(rspDict)
+                let authToken: String = rspDict["auth_token"] as String
+                //Does a stored user exist?
+                
+//                println("Login response.")
+//                println(authToken)
             }
         })
     }
     
+    func getUser() {
+        let fetchRequest = NSFetchRequest(entityName: "User")
+        if let fetchResults = managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as User
+    }
     
     func callAPI(method: String?, data: AnyObject?, completionHandler: ((NSData!, NSURLResponse!, NSError!) -> Void)?) {
         
@@ -103,9 +111,7 @@ class ViewController: UIViewController {
         task.resume();
     }
     
-    
-    
-    
+   
     
     @IBAction func onSignupPress(sender: UIButton) {
         if (!self.signup_uname.text.isEmpty &&
@@ -126,7 +132,9 @@ class ViewController: UIViewController {
                         let rspDict:NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: nil) as NSDictionary
                         if (rspDict["message"] != nil) {
                             //Duplicate user.
+                            println("Sign up - Duplicate user.")
                         } else {
+                            println("Sign up - Success.")
                             //New user. Log in.
                             //Return to main thread & log in.
                             dispatch_async(dispatch_get_main_queue(), { () -> Void in

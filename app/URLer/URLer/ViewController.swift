@@ -43,8 +43,17 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        println(managedObjectContext!)
-        //self.auth_view.hidden = true
+        managedObjectContext;
+        
+        //println(managedObjectContext!)
+        self.auth_view.hidden = true
+        let user:User? = self.getUser()
+        if (user != nil) {
+            //We have a pre-auth'd user.
+        } else {
+            
+        }
+        
         // Do any additional setup after loading the view, typically from a nib.
     }
     
@@ -78,9 +87,11 @@ class ViewController: UIViewController {
                 let user:User? = self.getUser()
                 if (user != nil) {
                     //We have a pre-stored user.  Update their auth token
-                    println("Existing user");
-                    println(user)
-                    
+                    println("Existing user")
+                    println(user?.auth_token)
+                    user?.auth_token = authToken
+                    println("New auth token:" + authToken)
+                    self.persistContext()
                 } else {
                     println("Creating user")
                     println("Username: " + self.login_uname.text)
@@ -91,6 +102,7 @@ class ViewController: UIViewController {
                     newUser.username    = self.login_uname.text
                     newUser.password    = self.login_pass.text
                     newUser.auth_token  = authToken
+                    self.persistContext()
                 }
             }
         })
@@ -101,7 +113,7 @@ class ViewController: UIViewController {
         if let fetchResults = managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [User] {
             if (fetchResults.count > 0) {
                 println("WE GOT ONE")
-                return fetchResults[0]
+                return fetchResults[0] as User
             } else {
                 println("No users stored.")
                 return nil
@@ -110,6 +122,13 @@ class ViewController: UIViewController {
             println("Negative, ghostrider.")
             return nil;
         }
+    }
+    
+    //Tell the context to save the current state.
+    func persistContext() {
+        var appDel : AppDelegate = (UIApplication.sharedApplication().delegate as AppDelegate)
+        var context : NSManagedObjectContext = appDel.managedObjectContext!
+        context.save(nil)
     }
     
     func callAPI(method: String?, data: AnyObject?, completionHandler: ((NSData!, NSURLResponse!, NSError!) -> Void)?) {

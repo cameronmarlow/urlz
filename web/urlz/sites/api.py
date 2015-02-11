@@ -25,7 +25,7 @@ def check_auth(**kw):
 
 def check_owner(data=None, **kw):
     """Check to make sure the owner of an object is updating/deleting it"""
-    if 'owner_id' in data and not data['owner_id'] == current_user.id:
+    if data and 'owner_id' in data and not data['owner_id'] == current_user.id:
         raise ProcessingException(description="No write privileges",
             code=401)
 

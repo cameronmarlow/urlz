@@ -58,6 +58,8 @@ class Article(object):
     def get_canonical_url(self):
         if 'canonical_urls' in self.properties:
             return self.properties['canonical_urls'][0]
+        else:
+            return self.url
 
     def get_title(self):
         if 'titles' in self.properties:

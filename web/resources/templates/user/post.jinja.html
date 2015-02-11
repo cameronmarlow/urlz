@@ -1,0 +1,43 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.jinja.html" %}
+
+{% block title %}
+Post
+{% endblock %}
+
+{% block navbar %}
+
+{% endblock %}
+
+{% block content %}
+{{super()}}
+<div id="post-form" class="row">
+  <div class="col-xs-2">
+  </div>
+  <div class="col-xs-8">
+    {% if not posted %}
+      <form action="{{ url_for('users.post') }}" method="POST" name="post_form">
+        {{ post_form.hidden_tag() }}
+        {{ wtf.form_field(post_form.category) }}
+        {{ wtf.form_field(post_form.note) }}
+        {{ wtf.form_field(post_form.submit) }}
+        {{ post_form.owner_id() }}
+        {{ wtf.form_errors(post_form) }}
+        {% if url_preview %}
+          {{ post_form.url_id() }}
+        {% else %}
+          {{ wtf.form_field(post_form.url) }}
+        {% endif %}
+      </form>
+    {% endif %}
+    {% if url_preview %}
+      <h3>{{ url_preview.title }}</h3>
+      <p>{{ url_preview.description }}</p>
+      <img src="{{ url_preview.image }}" class="img-responsive" />
+      <small>{{ url_preview.url }}</small>
+      {{ post_form.url_id() }}
+    {% endif %}
+  </div>
+  <div class="col-xs-2"></div>
+</div>
+{% endblock %}

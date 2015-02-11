@@ -168,8 +168,9 @@ class MicrodataExtractor(HTMLExtractor):
         # find Microdata items
         items = microdata.get_items(self.html)
         for item in items:
-            for itemtype in item.itemtype:
-                if itemtype.string in self.TYPE_MAP:
-                    microex = self.TYPE_MAP[itemtype.string](item)
-                    microex.extract(extracted)
+            if item.itemtype:
+                for itemtype in item.itemtype:
+                    if itemtype.string in self.TYPE_MAP:
+                        microex = self.TYPE_MAP[itemtype.string](item)
+                        microex.extract(extracted)
 

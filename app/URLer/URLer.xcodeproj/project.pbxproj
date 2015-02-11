@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7B6BE7661A89CD030010B6AE /* URLer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B6BE7651A89CD030010B6AE /* URLer.swift */; };
+		7B6BE7661A89CD030010B6AE /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B6BE7651A89CD030010B6AE /* User.swift */; };
 		7B702BD91A7F49FC005228D2 /* json.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B702BD81A7F49FC005228D2 /* json.swift */; };
 		7BFCD8051A7EC47A004D6F4E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCD8041A7EC47A004D6F4E /* AppDelegate.swift */; };
 		7BFCD8081A7EC47A004D6F4E /* URLer.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCD8061A7EC47A004D6F4E /* URLer.xcdatamodeld */; };
@@ -29,7 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		7B6BE7651A89CD030010B6AE /* URLer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLer.swift; sourceTree = "<group>"; };
+		7B6BE7651A89CD030010B6AE /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		7B702BD81A7F49FC005228D2 /* json.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = json.swift; path = "../../../../../../Users/jeffery/Downloads/swift-json-master/json/json.swift"; sourceTree = "<group>"; };
 		7BFCD7FF1A7EC47A004D6F4E /* URLer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = URLer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BFCD8031A7EC47A004D6F4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -90,7 +90,7 @@
 				7BFCD80E1A7EC47A004D6F4E /* Images.xcassets */,
 				7BFCD8101A7EC47A004D6F4E /* LaunchScreen.xib */,
 				7BFCD8061A7EC47A004D6F4E /* URLer.xcdatamodeld */,
-				7B6BE7651A89CD030010B6AE /* URLer.swift */,
+				7B6BE7651A89CD030010B6AE /* User.swift */,
 				7BFCD8021A7EC47A004D6F4E /* Supporting Files */,
 			);
 			path = URLer;
@@ -224,7 +224,7 @@
 				7BFCD80A1A7EC47A004D6F4E /* ViewController.swift in Sources */,
 				7BFCD8081A7EC47A004D6F4E /* URLer.xcdatamodeld in Sources */,
 				7BFCD8051A7EC47A004D6F4E /* AppDelegate.swift in Sources */,
-				7B6BE7661A89CD030010B6AE /* URLer.swift in Sources */,
+				7B6BE7661A89CD030010B6AE /* User.swift in Sources */,
 				7B702BD91A7F49FC005228D2 /* json.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -75,17 +75,41 @@ class ViewController: UIViewController {
             if (error == nil) {
                 let rspDict:NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: nil) as NSDictionary
                 let authToken: String = rspDict["auth_token"] as String
-                //Does a stored user exist?
-                
-//                println("Login response.")
-//                println(authToken)
+                let user:User? = self.getUser()
+                if (user != nil) {
+                    //We have a pre-stored user.  Update their auth token
+                    println("Existing user");
+                    println(user)
+                    
+                } else {
+                    println("Creating user")
+                    println("Username: " + self.login_uname.text)
+                    println("Password: " + self.login_pass.text)
+                    println("Auth token: " + authToken)
+                    //No user.  Create one.
+                    let newUser = NSEntityDescription.insertNewObjectForEntityForName("User", inManagedObjectContext: self.managedObjectContext!) as User
+                    newUser.username    = self.login_uname.text
+                    newUser.password    = self.login_pass.text
+                    newUser.auth_token  = authToken
+                }
             }
         })
     }
     
-    func getUser() {
+    func getUser() -> User? {
         let fetchRequest = NSFetchRequest(entityName: "User")
-        if let fetchResults = managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as User
+        if let fetchResults = managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [User] {
+            if (fetchResults.count > 0) {
+                println("WE GOT ONE")
+                return fetchResults[0]
+            } else {
+                println("No users stored.")
+                return nil
+            }
+        } else {
+            println("Negative, ghostrider.")
+            return nil;
+        }
     }
     
     func callAPI(method: String?, data: AnyObject?, completionHandler: ((NSData!, NSURLResponse!, NSError!) -> Void)?) {

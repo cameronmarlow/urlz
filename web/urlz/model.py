@@ -5,6 +5,7 @@ from uuid import uuid4
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.ext.declarative import declared_attr
 from flask.ext.security import SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin
 
@@ -25,6 +26,16 @@ class IDMixin(object):
     """Mixin to provide standard ID types"""
     id = db.Column(UUID(), server_default=db.func.uuid_generate_v4(),
                    primary_key=True)
+
+class OwnerMixin(object):
+    """Mixin to provide a consistent owner_id"""
+    @declared_attr
+    def owner_id(cls):
+        return db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
+
+    @declared_attr
+    def owner(cls):
+        return db.relationship("User")
 
 # Define models
 role_user = db.Table(
@@ -63,6 +74,13 @@ class User(IDMixin, AuditMixin, UserMixin, db.Model):
     tags = db.relationship('Tag')
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+
+class AddressBook(IDMixin, AuditMixin, OwnerMixin, db.Model):
+    """Stores remote users for the purpose of CC"""
+    __tablename__ = 'addressbook'
+
+    email = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(255))
 
 class URL(IDMixin, AuditMixin, db.Model):
     """General table for URLs"""
@@ -119,25 +137,34 @@ post_cc = db.Table(
               onupdate=db.func.current_timestamp())
 )
 
-class Post(IDMixin, AuditMixin, db.Model):
+# Post -> CC remote assocation table
+post_cc_remote = db.Table(
+    'post_cc_remote',
+    db.Column('post_id', UUID(), db.ForeignKey('post.id')),
+    db.Column('remote_id', UUID(), db.ForeignKey('addressbook.id')),
+    db.Column('created_at', db.DateTime(), server_default=db.func.now()),
+    db.Column('updated_at', db.DateTime(), server_default=db.func.now(),
+              onupdate=db.func.current_timestamp())
+)
+
+class Post(IDMixin, AuditMixin, OwnerMixin, db.Model):
     """The URL Post, in all its glory. Each post can be associated with tags
     (topics) and CCs (people to notify)"""
     __tablename__ = 'post'
 
-    owner_id = db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
     canonical_url = db.Column(UUID(), db.ForeignKey('url.id'), nullable=False)
     note = db.Column(db.String)
     tags = db.relationship('Tag', secondary=post_tag,
                            backref=db.backref('post', lazy='dynamic'))
     ccs = db.relationship('User', secondary=post_cc)
+    ccs_remote = db.relationship('AddressBook', secondary=post_cc_remote)
     privacy = db.Column(db.Enum('private', 'public', name='post_privacy'),
                         default='public', nullable=False)
 
-class Tag(IDMixin, AuditMixin, db.Model):
+class Tag(IDMixin, AuditMixin, OwnerMixin, db.Model):
     """The Tag. A simple bucket for stuff."""
     __tablename__ = 'tag'
 
-    owner_id = db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     name_normalized = db.Column(db.String(255), nullable=False)
     type = db.Column(db.Enum('user', 'group', 'system', 'org',

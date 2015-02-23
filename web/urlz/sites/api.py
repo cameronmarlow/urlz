@@ -9,7 +9,7 @@ from flask.ext.security.core import current_user
 from flask.ext.restless import APIManager, ProcessingException
 
 
-from urlz.model import db, Post, Tag, URL, User, user_datastore
+from urlz.model import db, Post, Tag, URL, User, AddressBook, user_datastore
 
 def user_encrypt_password(data=None, **kw):
     """Encrypt a user password before storing in the database"""
@@ -94,4 +94,18 @@ class API(object):
             )
         )
         self.app.register_blueprint(url_blueprint)
+
+
+        addressbook_blueprint = self.manager.create_api_blueprint(
+            AddressBook,
+            methods=['GET', 'POST'],
+            preprocessors=dict(
+                GET_SINGLE=[check_auth],
+                GET_MANY=[check_auth],
+                POST=[check_auth, check_owner, add_owner_id],
+                PATCH_SINGLE=[check_auth, check_owner],
+                DELETE=[check_auth, check_owner]
+            )
+        )
+        self.app.register_blueprint(addressbook_blueprint)
 
